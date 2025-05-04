@@ -57,7 +57,7 @@ The server exposes the following tools (defined using `@mcp.tool()`) to the conn
     *   [uv](https://github.com/astral-sh/uv) installed (recommended for environment management and running).
 
 2.  **Environment Setup & Dependencies:**
-    *   Navigate to the `mcp_email_server` directory in your terminal.
+    *   Navigate to the `email-mcp-server` directory in your terminal.
     *   Create and activate a virtual environment using `uv`:
         ```bash
         uv venv
@@ -72,7 +72,7 @@ The server exposes the following tools (defined using `@mcp.tool()`) to the conn
         *(This installs the package in editable mode, which is good practice for development).*
 
 3.  **Configuration (`.env` file):**
-    *   Create a file named `.env` in the `mcp_email_server` directory.
+    *   Create a file named `.env` in the `email-mcp-server` directory.
     *   Add your email credentials and server details to this file:
         ```dotenv
         EMAIL_USER=YourEmailUsername@example.com
@@ -94,17 +94,17 @@ The server exposes the following tools (defined using `@mcp.tool()`) to the conn
 
 4.  **Configuration (Claude Desktop):**
     *   Add this server to your Claude Desktop developer configuration file (`developer_config.json`).
-    *   Replace `/path/to/mcp_email_server` with the **full, absolute path** to the `mcp_email_server` directory on your system.
+    *   Replace `/path/to/email-mcp-server` with the **full, absolute path** to the `email-mcp-server` directory on your system.
     *   Note: The `env` section in the JSON is now less critical if you use a `.env` file, but it can still be used to override `.env` variables if needed.
 
     ```json
     {
         "mcpServers": {
-            "mcp_email": {
+            "email-mcp-server": {
                 "command": "uv",
                 "args": [
                     "--directory",
-                    "/path/to/mcp_email_server",
+                    "/path/to/email-mcp-server",
                     "run",
                     "main.py"
                 ],
