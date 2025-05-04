@@ -154,7 +154,7 @@ def parse_email_message(raw_email_bytes: List[bytes]) -> Dict[str, Any]:
     return {"headers": headers, "body": body}
 
 
-mcp = FastMCP("mcp_email")
+mcp = FastMCP("email-mcp-server")
 
 
 @mcp.tool()
