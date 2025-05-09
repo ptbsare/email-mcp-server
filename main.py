@@ -157,8 +157,29 @@ def parse_email_message(raw_email_bytes: List[bytes]) -> Dict[str, Any]:
 mcp = FastMCP("email-mcp-server")
 
 
-@mcp.tool()
+@mcp.tool(description="Polls the email server for a list of all email headers, providing a summary of each email.")
 def pollEmails() -> List[Dict[str, Any]]:
+    """
+    Retrieves a list of email headers from the POP3 server.
+
+    This tool connects to the configured POP3 server, lists all available emails,
+    and for each email, fetches basic header information such as Subject, From,
+    Date, and Message-ID. It does not download the entire email body, making it
+    a quick way to get an overview of the inbox.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, where each dictionary
+        represents an email and contains:
+            - "id" (int): The email's ID on the server.
+            - "Subject" (str): The decoded subject of the email.
+            - "From" (str): The decoded sender of the email.
+            - "Date" (str): The date of the email.
+            - "Message-ID" (str): The unique message ID of the email.
+            - "error" (str, optional): If an error occurred processing this specific email.
+    Raises:
+        ConnectionError: If connection to the POP3 server fails.
+        Exception: For other errors during the polling process.
+    """
     results = []
     mailbox = None
     try:
@@ -196,8 +217,35 @@ def pollEmails() -> List[Dict[str, Any]]:
                 logging.warning(f"Error closing POP3 connection after pollEmails: {e}")
 
 
-@mcp.tool()
+@mcp.tool(description="Retrieves the full content (headers and body) of specified emails by their server IDs.")
 def getEmailsById(ids: List[int]) -> List[Dict[str, Any]]:
+    """
+    Fetches complete email messages (headers and body) for a given list of email IDs.
+
+    Connects to the POP3 server and retrieves the full raw content for each valid ID
+    provided in the input list. The raw email content is then parsed to extract
+    headers and the body (preferring HTML over plain text if available).
+
+    Args:
+        ids (List[int]): A list of integer IDs corresponding to the emails to be fetched.
+                         IDs should be 1-based and within the range of available emails
+                         on the server.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, where each dictionary
+        represents a fetched email or an error for a specific ID:
+            - "id" (int): The requested email ID.
+            - "headers" (Dict[str, str], optional): A dictionary of decoded email headers
+              (e.g., "Subject", "From", "To", "Date"). Present if successful.
+            - "body" (str, optional): The decoded email body (HTML if available,
+              otherwise plain text). Present if successful.
+            - "error" (str, optional): An error message if fetching or parsing
+              the email for this ID failed, or if the ID was invalid/out of range.
+    Raises:
+        ValueError: If the input 'ids' is not a list.
+        ConnectionError: If connection to the POP3 server fails.
+        Exception: For other errors during the email retrieval process.
+    """
     results = []
     mailbox = None
     if not isinstance(ids, list):
@@ -247,8 +295,31 @@ def getEmailsById(ids: List[int]) -> List[Dict[str, Any]]:
                 logging.warning(f"Error closing POP3 connection after getEmailsById: {e}")
 
 
-@mcp.tool()
+@mcp.tool(description="Deletes specified emails from the server by their IDs. This action is permanent after the connection is closed.")
 def deleteEmailsById(ids: List[int]) -> Dict[str, Any]:
+    """
+    Marks specified emails for deletion from the POP3 server.
+
+    Connects to the POP3 server and issues a DELE command for each valid email ID
+    provided in the input list. The actual deletion occurs when the connection
+    to the server is closed (quit command).
+
+    Args:
+        ids (List[int]): A list of integer IDs corresponding to the emails to be deleted.
+                         IDs should be 1-based and within the range of available emails
+                         on the server.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing two lists:
+            - "deleted" (List[int]): A list of IDs that were successfully marked for deletion.
+            - "failed" (Dict[str, str]): A dictionary where keys are string representations
+              of IDs that failed to be marked for deletion, and values are error messages.
+              This includes invalid/out-of-range IDs.
+    Raises:
+        ValueError: If the input 'ids' is not a list.
+        ConnectionError: If connection to the POP3 server fails.
+        Exception: For other errors during the deletion process.
+    """
     mailbox = None
     deleted_ids = []
     failed_ids = {}
@@ -291,8 +362,30 @@ def deleteEmailsById(ids: List[int]) -> Dict[str, Any]:
                 logging.warning(f"Error closing POP3 connection (deletion might be incomplete): {e}")
 
 
-@mcp.tool()
+@mcp.tool(description="Sends a plain text email using the configured SMTP server.")
 def sendTextEmail(fromAddress: str, toAddresses: List[str], subject: str, body: str) -> Dict[str, str]:
+    """
+    Sends a plain text email.
+
+    Connects to the configured SMTP server and sends an email with the provided
+    details. The email is sent as 'text/plain'.
+
+    Args:
+        fromAddress (str): The email address of the sender.
+                           Note: Some SMTP servers may require this to match the authenticated user.
+        toAddresses (List[str]): A list of recipient email addresses.
+        subject (str): The subject line of the email.
+        body (str): The plain text content of the email body.
+
+    Returns:
+        Dict[str, str]: A dictionary indicating the status of the send operation.
+            - "status" (str): "success" if the email was sent without raising an
+              immediate error from the SMTP library.
+    Raises:
+        ValueError: If 'toAddresses' is not a non-empty list.
+        ConnectionError: If connection to the SMTP server fails.
+        Exception: For other errors during the email sending process (e.g., SMTP errors).
+    """
     if not isinstance(toAddresses, list) or not toAddresses:
         raise ValueError("Input 'toAddresses' must be a non-empty list.")
     if fromAddress != EMAIL_USER:
@@ -321,8 +414,31 @@ def sendTextEmail(fromAddress: str, toAddresses: List[str], subject: str, body: 
                  logging.warning(f"Error closing SMTP connection after sendTextEmail: {e}")
 
 
-@mcp.tool()
+@mcp.tool(description="Sends an HTML email using the configured SMTP server.")
 def sendHtmlEmail(fromAddress: str, toAddresses: List[str], subject: str, body: str) -> Dict[str, str]:
+    """
+    Sends an HTML email.
+
+    Connects to the configured SMTP server and sends an email with the provided
+    details. The email is sent as 'text/html' within a multipart/alternative
+    MIME structure.
+
+    Args:
+        fromAddress (str): The email address of the sender.
+                           Note: Some SMTP servers may require this to match the authenticated user.
+        toAddresses (List[str]): A list of recipient email addresses.
+        subject (str): The subject line of the email.
+        body (str): The HTML content of the email body.
+
+    Returns:
+        Dict[str, str]: A dictionary indicating the status of the send operation.
+            - "status" (str): "success" if the email was sent without raising an
+              immediate error from the SMTP library.
+    Raises:
+        ValueError: If 'toAddresses' is not a non-empty list.
+        ConnectionError: If connection to the SMTP server fails.
+        Exception: For other errors during the email sending process (e.g., SMTP errors).
+    """
     if not isinstance(toAddresses, list) or not toAddresses:
         raise ValueError("Input 'toAddresses' must be a non-empty list.")
     if fromAddress != EMAIL_USER:
