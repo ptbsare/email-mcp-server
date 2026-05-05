@@ -7,7 +7,7 @@ A Model Context Protocol (MCP) server for email operations (POP3/SMTP with TLS).
 The fastest way to use the Email MCP Server — no clone, no install:
 
 ```bash
-uvx https://github.com/ptbsare/email-mcp-server
+uvx git+https://github.com/ptbsare/email-mcp-server
 ```
 
 That's it. The server starts immediately. On first run, uvx caches the package; subsequent launches are instant.
@@ -39,7 +39,7 @@ Add the following to your Claude Desktop config file:
     "email-mcp-server": {
       "command": "uvx",
       "args": [
-        "https://github.com/ptbsare/email-mcp-server"
+        "git+https://github.com/ptbsare/email-mcp-server"
       ],
       "env": {
         "EMAIL_USER": "your-email@example.com",
