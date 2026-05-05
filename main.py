@@ -475,3 +475,9 @@ if __name__ == "__main__":
     logging.info(f"Starting MCP Email Server (FastMCP) '{mcp.name}'...")
     mcp.run(transport='stdio')
     logging.info("MCP Email Server stopped.")
+
+
+def main():
+    """Entry point for uvx / command-line execution."""
+    logging.info(f"Starting MCP Email Server (FastMCP) '{mcp.name}'...")
+    mcp.run(transport='stdio')
